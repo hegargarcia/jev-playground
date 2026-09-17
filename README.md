@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Little games — Tic tac toe
 
-## Getting Started
+Play X against Jev as O. Built with Next.js, React, TypeScript, Bun, and the Vercel AI SDK.
 
-First, run the development server:
+## Development
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```sh
+bun install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Set `AI_GATEWAY_KEY` in `.env.local` (or the server environment) to your Vercel AI Gateway key. Environment files are ignored by Git; the key is only read by the server.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```sh
+bun run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open http://localhost:3000. After each X move, Jev chooses O’s move. A failed request offers a retry, and restarting cancels any pending move.
 
-## Learn More
+The decision log beside the board records each O move with a board snapshot, the highlighted choice, and every legal option’s model weight. Weights are shown as percentages of the returned Choice distribution, not win probabilities. Missing weights are marked N/A. Newest moves appear first, and restarting clears the log. On small screens the log sits below the board.
 
-To learn more about Next.js, take a look at the following resources:
+Each entry also shows response confidence from Jev’s `providerMetadata.typesafe.confidence.move`, as a percentage. This is a separate provider statistic from the option weights. Missing or invalid confidence is shown as “Not provided.”
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Model integration
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+`POST /api/move` validates the board and calls `experimental_evaluate` using `createGateway({ apiKey: process.env.AI_GATEWAY_KEY })` and `gateway.evaluationModel("typesafe-ai/jev")`. The evaluation asks a Choice question whose options contain only empty squares. The selected move is validated before being applied. There is no fallback opponent.
 
-## Deploy on Vercel
+The [evaluation API](https://ai-sdk.dev/docs/ai-sdk-core/evaluation) is experimental. The Bun lockfile records the installed SDK version. Model play quality is determined by Jev; it is not guaranteed to be optimal.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Checks
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```sh
+bun run test
+bun run lint
+bun run build
+```
+
+Tests use the SDK evaluation mock and do not make paid model calls. They cover board validation, legal move choices, invalid responses, terminal games, cancellation, and API input errors.
