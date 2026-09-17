@@ -1,0 +1,15 @@
+.board { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; padding: 8px; background: #e9e9dd; border: 1px solid #dfdfd0; border-radius: 12px; box-shadow: 0 8px 0 -3px #d9dacd; }
+.column { display: flex; flex-direction: column; gap: 5px; padding: 0; min-width: 0; border: 0; border-radius: 20px; background: transparent; cursor: pointer; }
+.column:disabled { cursor: default; opacity: 1; }
+.columnLabel { width: 100%; padding: 4px 0; font-size: 11px; color: #59634f; }
+.disc { display: grid; place-items: center; width: 100%; aspect-ratio: 1; border-radius: 50%; background: #fbf9f4; box-shadow: inset 0 2px 3px #303b3220; font-size: clamp(10px, 1vw, 16px); font-weight: 600; color: #fff; }
+.human { background: #b66045; }
+.ai { background: #637652; }
+.winning { outline: 3px solid #d4ab35; outline-offset: -3px; box-shadow: inset 0 0 0 5px #fbf9f4; }
+.column:focus-visible { outline: 2px solid #303b32; outline-offset: 3px; }
+.miniBoard { display: grid; grid-template-columns: repeat(7, 8px); gap: 2px; flex-shrink: 0; }
+.miniBoard span { display: grid; place-items: center; width: 8px; height: 8px; border-radius: 50%; background: #eeefe7; font-size: 8px; color: #637652; }
+.miniBoard span[class] { background: #637652; color: white; }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+@media (hover: hover) { .column:not(:disabled):hover { background: #d4dbc5; } }
+@media (max-width: 480px) { .board { gap: 4px; padding: 6px; } .column { gap: 4px; } }

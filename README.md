@@ -20,7 +20,7 @@ flowchart LR
 
 The game code owns the rules, legal actions, state transitions, and terminal conditions. The model chooses among the actions it is given. This keeps the decision visible: you can inspect the position, the available moves, and the choice that changed the game.
 
-All opponents receive the same game state, legal options, and tactical instructions through Vercel AI Gateway. Jev uses a native evaluation model; Luna, Haiku, and Gemini use the SDK’s experimental evaluation adapter around Gateway language models. Astra uses `generateText` with `Output.object` and a Zod schema that restricts its `choice` to legal square names.
+All opponents receive the same game state, legal options, and tactical instructions through Vercel AI Gateway. Jev uses a native evaluation model; Luna, Haiku, and Gemini use the SDK’s experimental evaluation adapter around Gateway language models. Astra uses `generateText` with `Output.object` and a Zod schema that restricts its `choice` to legal option names.
 
 ## Models
 
@@ -46,9 +46,17 @@ Each decision log shows the chosen moves, board snapshots, option weights when r
 
 Astra’s structured response contains only the chosen square, such as `{"choice":"center"}`. Its option weights and confidence remain unavailable.
 
+## Connect Four
+
+Open [localhost:3000/connect-four](http://localhost:3000/connect-four) to play the same five models on independent 7-column, 6-row boards. Click any column to drop your terracotta disc (X); the model plays olive (O). Four in a row horizontally, vertically, or diagonally wins.
+
+The server validates gravity, turn counts, and terminal states. Each legal column is a Choice option with its landing row and resulting board. Astra uses structured output restricted to those same column names. Decision logs highlight the chosen column and show every legal option’s weight and response confidence when supplied. Each board has its own retry and restart controls.
+
+Rules live in `src/lib/connect-four.ts`, prompts in `src/lib/connect-four-ai.ts`, and the endpoint is `/api/connect-four/move`.
+
 ## Benchmark direction
 
-The current app supports interactive comparisons in tic-tac-toe. Automated tournaments, aggregate scores, and additional games are future work.
+The current app supports interactive comparisons in tic-tac-toe and Connect Four. Automated tournaments and aggregate scores are future work.
 
 The benchmark should compare models on shared starting states and rules, tracking:
 
@@ -77,7 +85,7 @@ AI_GATEWAY_KEY=your_gateway_key
 bun run dev
 ```
 
-Open [localhost:3000](http://localhost:3000) and make your first move on any board. The key is read only on the server, and environment files are ignored by Git.
+Open [localhost:3000/tic-tac-toe](http://localhost:3000/tic-tac-toe) and make your first move on any board. The root URL redirects to the game. The key is read only on the server, and environment files are ignored by Git.
 
 ## Project map
 
@@ -87,9 +95,9 @@ Open [localhost:3000](http://localhost:3000) and make your first move on any boa
 | [`src/lib/models.ts`](src/lib/models.ts) | Available opponents and model IDs |
 | [`src/lib/ai-move.ts`](src/lib/ai-move.ts) | Shared evaluation instructions, legal choices, and response mapping |
 | [`src/app/api/move/route.ts`](src/app/api/move/route.ts) | Request validation, model selection, and Gateway calls |
-| [`src/app/page.tsx`](src/app/page.tsx) | Comparison page with a board for each model |
-| [`src/app/model-game.tsx`](src/app/model-game.tsx) | Independent game state, requests, and turn flow |
-| [`src/app/decision-log.tsx`](src/app/decision-log.tsx) | Move history, option weights, and confidence |
+| [`src/app/tic-tac-toe/page.tsx`](src/app/tic-tac-toe/page.tsx) | Comparison page with a board for each model |
+| [`src/app/tic-tac-toe/model-game.tsx`](src/app/tic-tac-toe/model-game.tsx) | Independent game state, requests, and turn flow |
+| [`src/app/tic-tac-toe/decision-log.tsx`](src/app/tic-tac-toe/decision-log.tsx) | Move history, option weights, and confidence |
 
 ## Checks
 

@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { emptyBoard, getGameState, moveResponseSchema, type Board } from "@/lib/game";
 import type { Model } from "@/lib/models";
 import { DecisionLog, type DecisionLogEntry } from "./decision-log";
-import styles from "./page.module.css";
+import styles from "../games.module.css";
 
 export function ModelGame({ model }: { model: Model }) {
   const titleId = useId();

@@ -1,6 +1,6 @@
 import type { Board, MoveDecision } from "@/lib/game";
 import { useId } from "react";
-import styles from "./page.module.css";
+import styles from "../games.module.css";
 
 export type DecisionLogEntry = MoveDecision & { board: Board; modelName: string };
 
