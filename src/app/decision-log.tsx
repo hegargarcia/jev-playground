@@ -1,4 +1,5 @@
 import type { Board, MoveDecision } from "@/lib/game";
+import { useId } from "react";
 import styles from "./page.module.css";
 
 export type DecisionLogEntry = MoveDecision & { board: Board; modelName: string };
@@ -14,12 +15,13 @@ function formatPercentage(weight: number | null) {
 }
 
 export function DecisionLog({ entries }: { entries: DecisionLogEntry[] }) {
+  const titleId = useId();
   return (
-    <aside className={styles.decisionLog} aria-labelledby="decision-log-title">
+    <aside className={styles.decisionLog} aria-labelledby={titleId}>
       <div className={styles.logHeading}>
         <div>
           <p className={styles.eyebrow}>INSIDE THE MOVE</p>
-          <h2 id="decision-log-title">Decision log</h2>
+          <h3 id={titleId}>Decision log</h3>
         </div>
         <span className={styles.logCount}>{entries.length} {entries.length === 1 ? "move" : "moves"}</span>
       </div>
@@ -37,7 +39,7 @@ export function DecisionLog({ entries }: { entries: DecisionLogEntry[] }) {
               <div className={styles.decisionHeader}>
                 <div>
                   <p className={styles.eyebrow}>O MOVE {String(number).padStart(2, "0")} · {entry.modelName}</p>
-                  <h3>Chose {squareLabel(entry.move)}</h3>
+                  <h4>Chose {squareLabel(entry.move)}</h4>
                   <p className={styles.confidence} title="The provider’s reported confidence in this evaluation.">
                     Response confidence <strong>{entry.confidence == null ? "Not provided" : formatPercentage(entry.confidence)}</strong>
                   </p>

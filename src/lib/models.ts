@@ -7,4 +7,5 @@ export const models = [
   { id: "google/gemini-3.5-flash-lite", name: "Gemini 3.5 Flash Lite", provider: "Google" },
 ] as const;
 
+export type Model = (typeof models)[number];
 export const modelIdSchema = z.enum(models.map(({ id }) => id));

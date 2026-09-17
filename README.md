@@ -35,11 +35,11 @@ The model list lives in [`src/lib/models.ts`](src/lib/models.ts). Model identifi
 
 ## First game: tic-tac-toe
 
-Choose an opponent and play X; the model plays O. Changing models starts a fresh game.
+Play X against four opponents, each playing O on its own board. Games run independently, so you can play one model while another is thinking. Each board has its own move history, retry control, and restart button.
 
 For each model turn, the server supplies the board and every legal move as a Choice option. Options have descriptive names such as `center` and `top_left`, coordinates, and the resulting board. Shared instructions describe the rules and priorities: win, block, create or prevent forks, and preserve a draw against optimal play.
 
-The decision log shows each chosen move, a board snapshot, option weights when returned, and provider confidence when available. Failed requests can be retried. Restarting cancels the pending request and clears the log.
+Each decision log shows the chosen moves, board snapshots, option weights when returned, and provider confidence when available. Failed requests can be retried. Restarting a board cancels its pending request and clears its log without affecting the other games.
 
 **Reading the results:** option weights describe the model’s returned Choice distribution; they are not win probabilities. Response confidence is a separate provider statistic and is not assumed to be comparable across models. Missing values are shown as unavailable, rather than inferred.
 
@@ -74,7 +74,7 @@ AI_GATEWAY_KEY=your_gateway_key
 bun run dev
 ```
 
-Open [localhost:3000](http://localhost:3000), select a model, and make your first move. The key is read only on the server, and environment files are ignored by Git.
+Open [localhost:3000](http://localhost:3000) and make your first move on any board. The key is read only on the server, and environment files are ignored by Git.
 
 ## Project map
 
@@ -84,7 +84,8 @@ Open [localhost:3000](http://localhost:3000), select a model, and make your firs
 | [`src/lib/models.ts`](src/lib/models.ts) | Available opponents and model IDs |
 | [`src/lib/ai-move.ts`](src/lib/ai-move.ts) | Shared evaluation instructions, legal choices, and response mapping |
 | [`src/app/api/move/route.ts`](src/app/api/move/route.ts) | Request validation, model selection, and Gateway calls |
-| [`src/app/page.tsx`](src/app/page.tsx) | Game interface and turn flow |
+| [`src/app/page.tsx`](src/app/page.tsx) | Comparison page with a board for each model |
+| [`src/app/model-game.tsx`](src/app/model-game.tsx) | Independent game state, requests, and turn flow |
 | [`src/app/decision-log.tsx`](src/app/decision-log.tsx) | Move history, option weights, and confidence |
 
 ## Checks
