@@ -42,7 +42,7 @@ test("boards handle concurrent replies and resets without affecting another game
   try {
     await act(async () => root.render(<>{models.map((model) => <ModelGame key={model.id} model={model} />)}</>));
     const games = [...container.querySelectorAll("section")];
-    assert.equal(games.length, 4);
+    assert.equal(games.length, models.length);
     function square(game: number, index: number) {
       const button = games[game].querySelectorAll<HTMLButtonElement>('[role="group"] button')[index];
       assert.ok(button);

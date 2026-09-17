@@ -67,7 +67,7 @@ export function DecisionLog({ entries }: { entries: DecisionLogEntry[] }) {
                 ))}
               </ul>
               {entry.options.some(({ weight }) => weight === null) && (
-                <p className={styles.missingWeights}>{entry.modelName} does not supply option weights through this evaluation API.</p>
+                <p className={styles.missingWeights}>{entry.modelName} did not return option weights for this move.</p>
               )}
             </li>
           ))}

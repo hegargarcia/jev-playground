@@ -1,12 +1,49 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { Experimental_EvaluationMockModelV4 } from "ai/test";
-import { chooseMove } from "./ai-move";
+import { Experimental_EvaluationMockModelV4, MockLanguageModelV4 } from "ai/test";
+import { chooseMove, chooseStructuredMove } from "./ai-move";
 import { emptyBoard, getGameState, moveRequestSchema, type Board } from "./game";
 import { POST } from "../app/api/move/route";
 import { models } from "./models";
 
 const opening: Board = ["X", null, null, null, null, null, null, null, null];
+
+function structuredModel(text: string) {
+  return new MockLanguageModelV4({
+    doGenerate: async () => ({
+      content: [{ type: "text", text }],
+      finishReason: { unified: "stop", raw: undefined },
+      usage: {
+        inputTokens: { total: 10, noCache: 10, cacheRead: undefined, cacheWrite: undefined },
+        outputTokens: { total: 5, text: 5, reasoning: undefined },
+      },
+      warnings: [],
+    }),
+  });
+}
+
+test("structured moves map a legal named choice to the board without invented statistics", async () => {
+  const decision = await chooseStructuredMove(opening, structuredModel('{"choice":"center"}'));
+  assert.deepEqual(decision, {
+    move: 4,
+    confidence: null,
+    options: [1, 2, 3, 4, 5, 6, 7, 8].map((square) => ({ square, weight: null })),
+  });
+});
+
+test("structured moves reject occupied squares, unknown choices, and malformed output", async () => {
+  for (const text of ['{"choice":"top_left"}', '{"choice":"outside_board"}', '{"move":4}', 'not JSON']) {
+    await assert.rejects(chooseStructuredMove(opening, structuredModel(text)));
+  }
+});
+
+test("structured moves skip generation on invalid turns and honor cancellation", async () => {
+  const model = structuredModel('{"choice":"center"}');
+  await assert.rejects(chooseStructuredMove(emptyBoard(), model), /Cannot request/);
+  assert.equal(model.doGenerateCalls.length, 0);
+  await assert.rejects(chooseStructuredMove(opening, model, AbortSignal.abort()), { name: "AbortError" });
+  assert.equal(model.doGenerateCalls.length, 0);
+});
 
 function modelChoosing(choice: string) {
   return new Experimental_EvaluationMockModelV4({

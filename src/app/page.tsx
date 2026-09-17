@@ -15,7 +15,7 @@ export default function Home() {
       </header>
 
       <div className={styles.intro}>
-        <p className={styles.eyebrow}>FOUR OPPONENTS. YOUR MOVE.</p>
+        <p className={styles.eyebrow}>{models.length} OPPONENTS. YOUR MOVE.</p>
         <h1>A little friendly competition.</h1>
         <p className={styles.description}>You’re X on every board. Play each model independently—even while another is thinking.</p>
       </div>

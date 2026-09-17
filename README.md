@@ -20,7 +20,7 @@ flowchart LR
 
 The game code owns the rules, legal actions, state transitions, and terminal conditions. The model chooses among the actions it is given. This keeps the decision visible: you can inspect the position, the available moves, and the choice that changed the game.
 
-All opponents use the Vercel AI SDK’s experimental evaluation interface and receive the same game state, legal options, and instructions. Jev uses a native evaluation model through AI Gateway; the other opponents use the SDK’s evaluation adapter around Gateway language models.
+All opponents receive the same game state, legal options, and tactical instructions through Vercel AI Gateway. Jev uses a native evaluation model; Luna, Haiku, and Gemini use the SDK’s experimental evaluation adapter around Gateway language models. Astra uses `generateText` with `Output.object` and a Zod schema that restricts its `choice` to legal square names.
 
 ## Models
 
@@ -30,18 +30,21 @@ All opponents use the Vercel AI SDK’s experimental evaluation interface and re
 | OpenAI | GPT-5.6 Luna | `openai/gpt-5.6-luna` |
 | Anthropic | Claude Haiku 4.5 | `anthropic/claude-haiku-4.5` |
 | Google | Gemini 3.5 Flash Lite | `google/gemini-3.5-flash-lite` |
+| OpenAI | GPT-6 Astra | `openai/gpt-6-astra` |
 
 The model list lives in [`src/lib/models.ts`](src/lib/models.ts). Model identifiers above are the Gateway IDs used by this app; direct provider SDKs may use different names.
 
 ## First game: tic-tac-toe
 
-Play X against four opponents, each playing O on its own board. Games run independently, so you can play one model while another is thinking. Each board has its own move history, retry control, and restart button.
+Play X against five opponents, each playing O on its own board. Games run independently, so you can play one model while another is thinking. Each board has its own move history, retry control, and restart button.
 
 For each model turn, the server supplies the board and every legal move as a Choice option. Options have descriptive names such as `center` and `top_left`, coordinates, and the resulting board. Shared instructions describe the rules and priorities: win, block, create or prevent forks, and preserve a draw against optimal play.
 
 Each decision log shows the chosen moves, board snapshots, option weights when returned, and provider confidence when available. Failed requests can be retried. Restarting a board cancels its pending request and clears its log without affecting the other games.
 
 **Reading the results:** option weights describe the model’s returned Choice distribution; they are not win probabilities. Response confidence is a separate provider statistic and is not assumed to be comparable across models. Missing values are shown as unavailable, rather than inferred.
+
+Astra’s structured response contains only the chosen square, such as `{"choice":"center"}`. Its option weights and confidence remain unavailable.
 
 ## Benchmark direction
 

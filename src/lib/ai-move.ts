@@ -1,4 +1,4 @@
-import { experimental_evaluate, type Experimental_EvaluationModel } from "ai";
+import { experimental_evaluate, generateText, Output, type Experimental_EvaluationModel, type LanguageModel } from "ai";
 import { z } from "zod";
 import { getGameState, type Board } from "./game";
 
@@ -12,11 +12,7 @@ function boardRows(board: Board) {
   return [board.slice(0, 3), board.slice(3, 6), board.slice(6, 9)];
 }
 
-export async function chooseMove(
-  board: Board,
-  model: Experimental_EvaluationModel,
-  abortSignal?: AbortSignal,
-) {
+function createMoveEvaluation(board: Board) {
   if (!getGameState(board).isValidOTurn) {
     throw new Error("Cannot request an O move for this board.");
   }
@@ -35,8 +31,8 @@ export async function chooseMove(
     }]
     : []);
   const criteria = Object.fromEntries(options.map(({ name, description }) => [name, description]));
-  const result = await experimental_evaluate({
-    model,
+  return {
+    options,
     state: {
       game: "Tic tac toe",
       player_to_move: "O",
@@ -46,7 +42,7 @@ export async function chooseMove(
     },
     questions: {
       move: {
-        type: "choice",
+        type: "choice" as const,
         instructions: {
           question: "Which legal square should O play now to achieve the best outcome against an optimal X player?",
           rules: "Players alternate placing one mark in an empty square. Three matching marks in a row, column, or diagonal wins immediately. A full board without a winner is a draw.",
@@ -63,9 +59,16 @@ export async function chooseMove(
         criteria,
       },
     },
-    maxRetries: 1,
-    abortSignal,
-  });
+  };
+}
+
+export async function chooseMove(
+  board: Board,
+  model: Experimental_EvaluationModel,
+  abortSignal?: AbortSignal,
+) {
+  const { options, state, questions } = createMoveEvaluation(board);
+  const result = await experimental_evaluate({ model, state, questions, maxRetries: 1, abortSignal });
 
   const selected = options.find(({ name }) => name === result.answers.move.choice);
   if (!selected) {
@@ -81,5 +84,36 @@ export async function chooseMove(
       square,
       weight: result.answers.move.probabilities?.[name] ?? null,
     })),
+  };
+}
+
+export async function chooseStructuredMove(
+  board: Board,
+  model: LanguageModel,
+  abortSignal?: AbortSignal,
+) {
+  abortSignal?.throwIfAborted();
+  const { options, state, questions } = createMoveEvaluation(board);
+  const { output } = await generateText({
+    model,
+    output: Output.object({
+      name: "TicTacToeMove",
+      schema: z.object({
+        choice: z.enum(options.map(({ name }) => name)).describe("The legal square to place O in."),
+      }),
+    }),
+    system: "Choose O’s move using the supplied game rules, instructions, and legal options. Return the chosen option name in the requested JSON structure.",
+    prompt: JSON.stringify({ state, questions }),
+    maxRetries: 1,
+    abortSignal,
+  });
+  abortSignal?.throwIfAborted();
+  const selected = options.find(({ name }) => name === output.choice);
+  if (!selected) throw new Error("The model returned an illegal move.");
+
+  return {
+    move: selected.square,
+    confidence: null,
+    options: options.map(({ square }) => ({ square, weight: null })),
   };
 }

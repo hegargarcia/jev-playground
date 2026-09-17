@@ -1,6 +1,6 @@
 import { createGateway } from "ai";
 import { Experimental_EvaluationLanguageModel } from "@ai-sdk/provider-utils/experimental-evaluation";
-import { chooseMove } from "@/lib/ai-move";
+import { chooseMove, chooseStructuredMove } from "@/lib/ai-move";
 import { moveRequestSchema } from "@/lib/game";
 
 export async function POST(request: Request) {
@@ -23,14 +23,18 @@ export async function POST(request: Request) {
 
   const gateway = createGateway({ apiKey });
   const modelId = parsed.data.model;
-  // Use the SDK's standard evaluation adapter for Gateway language models.
-  const model = modelId === "typesafe-ai/jev"
-    ? gateway.evaluationModel(modelId)
-    : new Experimental_EvaluationLanguageModel({ model: gateway.languageModel(modelId) });
   const signal = AbortSignal.any([request.signal, AbortSignal.timeout(30_000)]);
 
   try {
-    const decision = await chooseMove(parsed.data.board, model, signal);
+    const decision = modelId === "openai/gpt-6-astra"
+      ? await chooseStructuredMove(parsed.data.board, gateway.languageModel(modelId), signal)
+      : await chooseMove(
+        parsed.data.board,
+        modelId === "typesafe-ai/jev"
+          ? gateway.evaluationModel(modelId)
+          : new Experimental_EvaluationLanguageModel({ model: gateway.languageModel(modelId) }),
+        signal,
+      );
     return Response.json(decision);
   } catch {
     const timedOut = signal.aborted;

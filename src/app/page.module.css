@@ -32,7 +32,7 @@
 @media (prefers-reduced-motion: reduce) { .square { transition: none; } }
 
 .intro { padding: 36px 0; text-align: center; }
-.games { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: start; gap: 20px; width: 100%; max-width: 1760px; margin: 0 auto 40px; flex: 1; }
+.games { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 20px; width: 100%; max-width: 1760px; margin: 0 auto 40px; flex: 1; }
 .modelHeading { min-height: 64px; }
 .modelHeading .eyebrow { margin: 0 0 10px; }
 .modelHeading h2 { font-size: 20px; font-weight: 550; letter-spacing: -.6px; margin: 0; }
@@ -76,4 +76,7 @@
 @media (max-width: 700px) {
   .games { grid-template-columns: minmax(0, 1fr); max-width: 440px; }
   .intro { padding: 28px 0; }
+}
+@media (min-width: 1650px) {
+  .games { grid-template-columns: repeat(5, minmax(0, 1fr)); max-width: 2100px; }
 }
