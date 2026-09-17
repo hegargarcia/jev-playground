@@ -24,6 +24,8 @@ Each entry also shows response confidence from Jev’s `providerMetadata.typesaf
 
 `POST /api/move` validates the board and calls `experimental_evaluate` using `createGateway({ apiKey: process.env.AI_GATEWAY_KEY })` and `gateway.evaluationModel("typesafe-ai/jev")`. The evaluation asks a Choice question whose options contain only empty squares. The selected move is validated before being applied. There is no fallback opponent.
 
+Following TypeSafe’s [Choice examples](https://docs.typesafe.ai/primitives/choice#structured-instructions-and-criteria), options use descriptive names such as `center` and `top_left`. Each option includes its coordinates and the board after placing O. Structured instructions define the rules and tactical priorities: win, block, create or prevent forks, and preserve a draw against optimal play. The model chooses the move; the server maps the option name and its weight back to the board square.
+
 The [evaluation API](https://ai-sdk.dev/docs/ai-sdk-core/evaluation) is experimental. The Bun lockfile records the installed SDK version. Model play quality is determined by Jev; it is not guaranteed to be optimal.
 
 ## Checks

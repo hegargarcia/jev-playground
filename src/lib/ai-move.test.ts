@@ -17,19 +17,32 @@ function modelChoosing(choice: string) {
 }
 
 test("offers only empty squares and preserves every returned weight, including zero", async () => {
-  const probabilities = { "1": 0.01, "2": 0.005, "3": 0.015, "4": 0.9, "5": 0.02, "6": 0.03, "7": 0.02, "8": 0 };
+  const probabilities = { top_middle: 0.01, top_right: 0.005, middle_left: 0.015, center: 0.9, middle_right: 0.02, bottom_left: 0.03, bottom_middle: 0.02, bottom_right: 0 };
   const model = new Experimental_EvaluationMockModelV4({
     doEvaluate: async ({ state, questions }) => {
-      assert.deepEqual(Object.keys(questions.move.criteria ?? {}), ["1", "2", "3", "4", "5", "6", "7", "8"]);
+      assert.deepEqual(Object.keys(questions.move.criteria ?? {}), Object.keys(probabilities));
+      assert.ok(questions.move.type === "choice");
+      assert.deepEqual(questions.move.criteria.center, {
+        action: "Place O in the center square.",
+        row: 2,
+        column: 2,
+        resulting_board: [["X", null, null], [null, "O", null], [null, null, null]],
+      });
+      assert.deepEqual(questions.move.criteria.bottom_right, {
+        action: "Place O in the bottom right square.",
+        row: 3,
+        column: 3,
+        resulting_board: [["X", null, null], [null, null, null], [null, null, "O"]],
+      });
       assert.deepEqual(state, {
         game: "Tic tac toe",
-        player: "O",
+        player_to_move: "O",
         opponent: "X",
-        rows: [["X", null, null], [null, null, null], [null, null, null]],
-        emptySquare: null,
+        board: [["X", null, null], [null, null, null], [null, null, null]],
+        coordinates: "Rows run top to bottom and columns left to right, numbered 1 to 3. Null is an empty square.",
       });
       return {
-        answers: { move: { type: "choice", choice: "4", probabilities } },
+        answers: { move: { type: "choice", choice: "center", probabilities } },
         providerMetadata: { typesafe: { confidence: { move: 0.73 } } },
         warnings: [],
       };
@@ -38,13 +51,13 @@ test("offers only empty squares and preserves every returned weight, including z
   assert.deepEqual(await chooseMove(opening, model), {
     move: 4,
     confidence: 0.73,
-    options: Object.entries(probabilities).map(([square, weight]) => ({ square: Number(square), weight })),
+    options: Object.values(probabilities).map((weight, index) => ({ square: index + 1, weight })),
   });
   assert.equal(opening[4], null);
 });
 
 test("keeps all legal options when the provider omits weights without inventing values", async () => {
-  const decision = await chooseMove(opening, modelChoosing("4"));
+  const decision = await chooseMove(opening, modelChoosing("center"));
   assert.equal(decision.move, 4);
   assert.equal(decision.confidence, null);
   assert.deepEqual(decision.options, [1, 2, 3, 4, 5, 6, 7, 8].map((square) => ({ square, weight: null })));
@@ -54,7 +67,7 @@ test("preserves zero confidence and treats invalid confidence as unavailable", a
   for (const confidence of [0, 1, "unknown", -1, 2]) {
     const model = new Experimental_EvaluationMockModelV4({
       doEvaluate: async () => ({
-        answers: { move: { type: "choice", choice: "4" } },
+        answers: { move: { type: "choice", choice: "center" } },
         providerMetadata: { typesafe: { confidence: { move: confidence } } },
         warnings: [],
       }),
@@ -65,7 +78,7 @@ test("preserves zero confidence and treats invalid confidence as unavailable", a
 });
 
 test("rejects occupied, out-of-range, and malformed model choices", async () => {
-  for (const choice of ["0", "9", "center"]) {
+  for (const choice of ["top_left", "outside_board", "4"]) {
     await assert.rejects(chooseMove(opening, modelChoosing(choice)));
   }
 });
@@ -113,5 +126,5 @@ test("propagates provider failures and cancellation without inventing a move", a
   await assert.rejects(chooseMove(opening, model), /Provider unavailable/);
   const controller = new AbortController();
   controller.abort();
-  await assert.rejects(chooseMove(opening, modelChoosing("4"), controller.signal), { name: "AbortError" });
+  await assert.rejects(chooseMove(opening, modelChoosing("center"), controller.signal), { name: "AbortError" });
 });
