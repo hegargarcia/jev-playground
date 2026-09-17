@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { modelIdSchema, models } from "./models";
 
 export const boardSchema = z.array(z.enum(["X", "O"]).nullable()).length(9);
 export type Board = z.infer<typeof boardSchema>;
@@ -43,6 +44,7 @@ export function getGameState(board: Board) {
 }
 
 export const moveRequestSchema = z.object({
+  model: modelIdSchema.default(models[0].id),
   board: boardSchema.refine((board) => getGameState(board).isValidOTurn, {
     message: "Expected an unfinished board where it is O’s turn.",
   }),

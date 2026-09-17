@@ -4,6 +4,7 @@ import { Experimental_EvaluationMockModelV4 } from "ai/test";
 import { chooseMove } from "./ai-move";
 import { emptyBoard, getGameState, moveRequestSchema, type Board } from "./game";
 import { POST } from "../app/api/move/route";
+import { models } from "./models";
 
 const opening: Board = ["X", null, null, null, null, null, null, null, null];
 
@@ -109,7 +110,7 @@ test("validates turn counts, board shape, and terminal positions", () => {
 });
 
 test("API rejects malformed JSON and invalid turns before using Gateway", async () => {
-  for (const body of ["{", "null", JSON.stringify({ board: emptyBoard() })]) {
+  for (const body of ["{", "null", JSON.stringify({ board: emptyBoard() }), JSON.stringify({ board: opening, model: "unsupported/model" })]) {
     const response = await POST(new Request("http://localhost/api/move", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -117,6 +118,14 @@ test("API rejects malformed JSON and invalid turns before using Gateway", async 
     }));
     assert.equal(response.status, 400);
   }
+});
+
+test("accepts only selectable models and defaults older requests to Jev", () => {
+  assert.equal(moveRequestSchema.parse({ board: opening }).model, "typesafe-ai/jev");
+  for (const { id } of models) {
+    assert.equal(moveRequestSchema.parse({ board: opening, model: id }).model, id);
+  }
+  assert.equal(moveRequestSchema.safeParse({ board: opening, model: "unsupported/model" }).success, false);
 });
 
 test("propagates provider failures and cancellation without inventing a move", async () => {

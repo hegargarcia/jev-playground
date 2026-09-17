@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Tic Tac Toe | Little Games",
-  description: "Play tic tac toe against Jev. You’re X, Jev is O. Get three in a row.",
+  description: "Play tic tac toe against Jev, GPT, Claude, or Gemini. You’re X, AI is O. Get three in a row.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

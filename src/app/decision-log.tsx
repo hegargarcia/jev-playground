@@ -1,7 +1,7 @@
 import type { Board, MoveDecision } from "@/lib/game";
 import styles from "./page.module.css";
 
-export type DecisionLogEntry = MoveDecision & { board: Board };
+export type DecisionLogEntry = MoveDecision & { board: Board; modelName: string };
 
 function squareLabel(square: number) {
   return `R${Math.floor(square / 3) + 1} · C${square % 3 + 1}`;
@@ -19,7 +19,7 @@ export function DecisionLog({ entries }: { entries: DecisionLogEntry[] }) {
       <div className={styles.logHeading}>
         <div>
           <p className={styles.eyebrow}>INSIDE THE MOVE</p>
-          <h2 id="decision-log-title">Jev’s decisions</h2>
+          <h2 id="decision-log-title">Decision log</h2>
         </div>
         <span className={styles.logCount}>{entries.length} {entries.length === 1 ? "move" : "moves"}</span>
       </div>
@@ -27,22 +27,22 @@ export function DecisionLog({ entries }: { entries: DecisionLogEntry[] }) {
       {entries.length === 0 ? (
         <div className={styles.logEmpty}>
           <span aria-hidden="true">○</span>
-          <p>A little window into Jev’s choices.</p>
+          <p>A little window into your opponent’s choices.</p>
           <p>Make your move to see the first decision.</p>
         </div>
       ) : (
-        <ol className={styles.logEntries} aria-label="Jev move history, newest first">
+        <ol className={styles.logEntries} aria-label="AI move history, newest first">
           {entries.map((entry, index) => ({ entry, number: index + 1 })).reverse().map(({ entry, number }) => (
             <li key={number} className={styles.decisionCard}>
               <div className={styles.decisionHeader}>
                 <div>
-                  <p className={styles.eyebrow}>O MOVE {String(number).padStart(2, "0")}</p>
+                  <p className={styles.eyebrow}>O MOVE {String(number).padStart(2, "0")} · {entry.modelName}</p>
                   <h3>Chose {squareLabel(entry.move)}</h3>
-                  <p className={styles.confidence} title="Jev’s reported confidence in this evaluation.">
+                  <p className={styles.confidence} title="The provider’s reported confidence in this evaluation.">
                     Response confidence <strong>{entry.confidence == null ? "Not provided" : formatPercentage(entry.confidence)}</strong>
                   </p>
                 </div>
-                <div className={styles.miniBoard} role="img" aria-label={`Board after Jev move ${number}; chosen row ${Math.floor(entry.move / 3) + 1}, column ${entry.move % 3 + 1}`}>
+                <div className={styles.miniBoard} role="img" aria-label={`Board after AI move ${number}; chosen row ${Math.floor(entry.move / 3) + 1}, column ${entry.move % 3 + 1}`}>
                   {entry.board.map((mark, square) => (
                     <span key={square} className={square === entry.move ? styles.miniChosen : undefined}>
                       {square === entry.move ? "○" : mark === "X" ? "×" : mark === "O" ? "○" : "·"}
@@ -65,7 +65,7 @@ export function DecisionLog({ entries }: { entries: DecisionLogEntry[] }) {
                 ))}
               </ul>
               {entry.options.some(({ weight }) => weight === null) && (
-                <p className={styles.missingWeights}>Jev did not return weights for the options marked N/A.</p>
+                <p className={styles.missingWeights}>{entry.modelName} does not supply option weights through this evaluation API.</p>
               )}
             </li>
           ))}
